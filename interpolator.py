@@ -17,24 +17,56 @@ def hex_col(string: str):
     return rgb_col(*col, 255)
 
 
-rgb1 = sRGBColor(*hex_col("#2d82b7")[:3])
-rgb2 = sRGBColor(*hex_col("#07004d")[:3])
+c1 = "#b7efc5"
+c2 = "#10451d"
 
-hsv1 = convert_color(rgb1, HSVColor)
-hsv2 = convert_color(rgb2, HSVColor)
+from scipy.special import comb
+
+
+def smoothstep(x, x_min=0, x_max=1, N=1):
+    x = np.clip((x - x_min) / (x_max - x_min), 0, 1)
+
+    result = 0
+    for n in range(0, N + 1):
+        result += comb(N + n, n) * comb(2 * N + 1, N - n) * (-x) ** n
+
+    result *= x ** (N + 1)
+
+    return result
+
+
+def hsv_interpolate(color1: str, color2: str, factor, use_smoothstep=False):
+    rgb1 = sRGBColor.new_from_rgb_hex(color1)
+    rgb2 = sRGBColor.new_from_rgb_hex(color2)
+
+    hsv1 = np.array(convert_color(rgb1, HSVColor).get_value_tuple())
+    hsv2 = np.array(convert_color(rgb2, HSVColor).get_value_tuple())
+
+    if use_smoothstep:
+        factor = smoothstep(factor)
+
+    return convert_color(HSVColor(*(hsv1 * factor + hsv2 * (1 - factor)).tolist()), sRGBColor).get_rgb_hex()
+
+
+def rgb_interpolate(color1: str, color2: str, factor, use_smoothstep=False):
+    rgb1 = np.array(sRGBColor.new_from_rgb_hex(color1).get_value_tuple())
+    rgb2 = np.array(sRGBColor.new_from_rgb_hex(color2).get_value_tuple())
+
+    if use_smoothstep:
+        factor = smoothstep(factor)
+
+    return sRGBColor(*(rgb1 * factor + rgb2 * (1 - factor))).get_rgb_hex()
+
 
 colors = []
-width, height = 250, 100
+width, height = 10, 3
 
 for t in range(0, width):
     t /= width
-    hsv_h = hsv1.hsv_h * t + hsv2.hsv_h * (1 - t)
-    hsv_s = hsv1.hsv_s * t + hsv2.hsv_s * (1 - t)
-    hsv_v = hsv1.hsv_v * t + hsv2.hsv_v * (1 - t)
 
-    lab3 = HSVColor(hsv_h, hsv_s, hsv_v)
+    rgb3 = sRGBColor.new_from_rgb_hex(hsv_interpolate(c1, c2, t))
 
-    rgb3 = convert_color(lab3, sRGBColor)
+    print(rgb3.get_rgb_hex())
 
     colors.append([rgb3.rgb_r * 255, rgb3.rgb_g * 255, rgb3.rgb_b * 255])
 
