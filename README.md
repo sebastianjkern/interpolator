@@ -10,3 +10,4 @@ Test suite for different color interpolation algorithms
 ## Features
 
 - HSV Interpolation
+- RGB Interpolation
