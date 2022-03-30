@@ -59,7 +59,7 @@ def rgb_interpolate(color1: str, color2: str, factor, use_smoothstep=False):
 
 
 colors = []
-width, height = 10, 3
+width, height = 250, 80
 
 for t in range(0, width):
     t /= width
